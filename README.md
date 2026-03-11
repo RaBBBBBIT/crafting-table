@@ -6,6 +6,10 @@
 - 工作台数据通过 HTTP 接口从远端后端读取和保存
 - 用户可以在客户端里自行配置后台服务器地址
 
+## 界面预览
+
+![Crafting Table 界面预览](./assets/readme-preview.png)
+
 ## 当前能力
 
 - 今日安排编辑
@@ -39,7 +43,8 @@ flowchart LR
 crafting-table/
 ├── assets/
 │   ├── icon.icns           # macOS 应用 / DMG 图标
-│   └── logo.png            # 页面内使用的 logo
+│   ├── logo-original.png   # 原始 logo 资源
+│   └── readme-preview.png  # README 示例截图
 ├── backend/
 │   └── server.js           # 示例后端
 ├── demo.html               # 原始界面 demo
