@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>开发工作台</title>
+  <style>
+    :root {
+      --bg: #0a1020;
+      --bg-2: #0f172a;
+      --text: #eef2ff;
+      --muted: #95a3c7;
+      --line: #24304a;
+      --line-2: #33415f;
+      --shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+      --radius: 18px;
+
+      --blue: #6ea8ff;
+      --red: #f87171;
+      --overlay: rgba(0, 0, 0, 0.42);
+      --field-bg: rgba(7, 12, 24, 0.72);
+      --chip-bg: rgba(255,255,255,0.06);
+
+      --project-a: linear-gradient(180deg, rgba(31,41,55,0.96), rgba(17,24,39,0.98));
+      --project-b: linear-gradient(180deg, rgba(30,41,59,0.96), rgba(15,23,42,0.98));
+      --project-c: linear-gradient(180deg, rgba(28,25,48,0.95), rgba(17,24,39,0.98));
+      --project-d: linear-gradient(180deg, rgba(20,37,46,0.95), rgba(15,23,42,0.98));
+    }
+
+    body.theme-light {
+      --bg: #eef4ff;
+      --bg-2: #f8fbff;
+      --text: #172033;
+      --muted: #60708f;
+      --line: #d5def0;
+      --line-2: #c1cce4;
+      --shadow: 0 4px 12px rgba(49, 72, 117, 0.08);
+      --field-bg: rgba(255,255,255,0.84);
+      --chip-bg: rgba(23,32,51,0.05);
+      --overlay: rgba(22, 34, 54, 0.18);
+
+      --project-a: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(244,247,255,0.99));
+      --project-b: linear-gradient(180deg, rgba(246,249,255,0.97), rgba(238,244,255,0.99));
+      --project-c: linear-gradient(180deg, rgba(248,246,255,0.97), rgba(240,242,255,0.99));
+      --project-d: linear-gradient(180deg, rgba(243,250,251,0.97), rgba(237,245,247,0.99));
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg-2);
+      color: var(--text);
+    }
+    body { min-height: 100vh; }
+
+    .app {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 14px 18px 18px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .title-wrap h1 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    .title-wrap p { display: none; }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    button, .ghost-file, input[type="text"], textarea {
+      border: 1px solid var(--line);
+      background: var(--field-bg);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font: inherit;
+      outline: none;
+      transition: 0.16s ease;
+    }
+
+    button, .ghost-file {
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+
+    button:hover, .ghost-file:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-2);
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, var(--blue), #4f46e5);
+      border-color: transparent;
+      color: white;
+    }
+
+    button.warn {
+      background: linear-gradient(135deg, #92400e, #b45309);
+      border-color: transparent;
+      color: white;
+    }
+
+    .ghost-file {
+      display: inline-flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .ghost-file input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .top-grid {
+      display: grid;
+      grid-template-columns: 0.72fr 1.08fr 1fr;
+      gap: 10px;
+      align-items: stretch;
+      margin-bottom: 10px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: none;
+      overflow: hidden;
+      min-height: 100%;
+      background: color-mix(in srgb, var(--field-bg) 92%, var(--bg-2));
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-bottom: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+    }
+
+    .panel-header h2 {
+      margin: 0;
+      font-size: 14px;
+      letter-spacing: 0.01em;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.2;
+    }
+
+    .panel-body { padding: 8px 10px 10px; }
+
+    .overview-mini {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .mini-stat {
+      padding: 8px 9px;
+      border-radius: 12px;
+      background: color-mix(in srgb, var(--field-bg) 96%, var(--bg-2));
+      border: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+    }
+
+    .mini-stat .label {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .mini-stat .value {
+      font-size: 19px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .save-status {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .field-grid { display: grid; gap: 8px; }
+    .field label {
+      display: block;
+      font-size: 12px;
+      color: color-mix(in srgb, var(--text) 86%, transparent);
+      margin-bottom: 5px;
+    }
+
+    input[type="text"], textarea {
+      width: 100%;
+      background: color-mix(in srgb, var(--field-bg) 96%, transparent);
+    }
+
+    textarea {
+      min-height: 84px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+    .today-note { min-height: 74px; }
+
+    .inbox-list {
+      display: grid;
+      gap: 8px;
+      max-height: 310px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+    .item-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: start;
+    }
+    .item-row textarea { min-height: 50px; }
+
+    .board-panel {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--bg-2);
+      box-shadow: none;
+      overflow: hidden;
+    }
+
+    .board-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--line);
+      flex-wrap: wrap;
+    }
+    .board-header h2 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .project-strip {
+      display: flex;
+      gap: 14px;
+      overflow-x: auto;
+      padding: 12px;
+      min-height: 500px;
+      align-items: stretch;
+      scroll-snap-type: x proximity;
+    }
+
+    .project-card {
+      flex: 0 0 360px;
+      max-width: 360px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      overflow: hidden;
+      scroll-snap-align: start;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .project-card.project-color-0 { background: var(--project-a); border-color: color-mix(in srgb, var(--blue) 30%, var(--line)); }
+    .project-card.project-color-1 { background: var(--project-b); border-color: rgba(99,102,241,0.26); }
+    .project-card.project-color-2 { background: var(--project-c); border-color: rgba(45,212,191,0.24); }
+    .project-card.project-color-3 { background: var(--project-d); border-color: rgba(148,163,184,0.24); }
+
+    .project-card[data-dragging="true"] {
+      opacity: 0.45;
+      transform: scale(0.985);
+    }
+    .project-card.drag-over {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--blue) 22%, transparent), var(--shadow);
+    }
+
+    .project-top {
+      padding: 7px 10px;
+      border-bottom: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+      background: transparent;
+      flex: 0 0 auto;
+    }
+    .drag-handle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--muted);
+      cursor: grab;
+      user-select: none;
+    }
+    .drag-dots {
+      letter-spacing: 2px;
+      color: var(--blue);
+      font-weight: 700;
+    }
+
+    .project-main {
+      padding: 10px 12px 12px;
+      display: grid;
+      gap: 10px;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+    .project-block {
+      border: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+      border-radius: 14px;
+      padding: 8px;
+      background: color-mix(in srgb, var(--field-bg) 96%, var(--bg-2));
+    }
+    .project-block label {
+      display: block;
+      font-size: 12px;
+      color: color-mix(in srgb, var(--text) 86%, transparent);
+      margin-bottom: 5px;
+    }
+    .project-title-input {
+      padding-top: 9px;
+      padding-bottom: 9px;
+    }
+    .project-textarea {
+      min-height: 320px;
+      height: calc(100% - 22px);
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .small-btn {
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      box-shadow: none;
+      background: color-mix(in srgb, var(--field-bg) 92%, transparent);
+    }
+    .small-btn.danger {
+      color: #fecaca;
+      border-color: rgba(248,113,113,0.28);
+    }
+
+    .empty {
+      min-width: 280px;
+      border: 1px dashed var(--line-2);
+      border-radius: 18px;
+      padding: 18px;
+      color: var(--muted);
+      background: color-mix(in srgb, var(--field-bg) 60%, transparent);
+    }
+    .footer-note {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .settings-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+      background: var(--overlay);
+    }
+    .settings-modal.open { display: flex; }
+
+    .settings-dialog {
+      width: min(420px, 100%);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: color-mix(in srgb, var(--field-bg) 96%, var(--bg-2));
+      box-shadow: var(--shadow);
+      overflow: visible;
+    }
+    .custom-select.open .custom-select-menu {
+      display: block;
+    }
+    .custom-option {
+      width: 100%;
+      padding: 10px 12px;
+      text-align: left;
+      border: none;
+      border-bottom: 1px solid color-mix(in srgb, var(--text) 6%, transparent);
+      border-radius: 0;
+      background: transparent;
+      color: var(--text);
+      box-shadow: none;
+    }
+    .custom-option:last-child { border-bottom: none; }
+    .custom-option:hover,
+    .custom-option.active {
+      background: color-mix(in srgb, var(--blue) 12%, transparent);
+    }
+
+    .settings-note {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .settings-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 12px 14px;
+      border-top: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+      position: relative;
+      z-index: 1;
+      position: relative;
+      z-index: 1;
+    }
+
+    @media (max-width: 1280px) {
+      .top-grid { grid-template-columns: 1fr; }
+      .project-card { flex-basis: 340px; max-width: 340px; }
+      .project-textarea { min-height: 280px; }
+    }
+    @media (max-width: 760px) {
+      .app { padding: 10px; }
+      .project-card { flex-basis: calc(100vw - 32px); max-width: calc(100vw - 32px); }
+      .topbar, .board-header { align-items: stretch; }
+      .actions { width: 100%; }
+      .actions > * { flex: 1 1 120px; }
+      .project-strip { min-height: 460px; }
+      .project-textarea { min-height: 260px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="title-wrap">
+        <h1>开发工作台</h1>
+        <p>上方统一调度，下方按颜色区分项目卡片。数据保存在当前浏览器。</p>
+      </div>
+      <div class="actions">
+        <button class="primary" id="addProjectBtn">新增项目</button>
+        <button id="addInboxBtn">新增收集项</button>
+        <button id="openSettingsBtn">外观设置</button>
+        <button id="exportBtn">导出数据</button>
+        <label class="ghost-file">导入数据<input type="file" id="importInput" accept="application/json" /></label>
+        <button class="warn" id="resetBtn">重置全部</button>
+      </div>
+    </div>
+
+    <section class="top-grid">
+      <section class="panel overview">
+        <div class="panel-header">
+          <h2>总览</h2>
+          <div class="meta">统计</div>
+        </div>
+        <div class="panel-body">
+          <div class="overview-mini" id="summaryRow"></div>
+          <div class="save-status" id="saveStatus">尚未修改</div>
+        </div>
+      </section>
+
+      <section class="panel today">
+        <div class="panel-header">
+          <h2>今日安排</h2>
+          <div class="meta">主线</div>
+        </div>
+        <div class="panel-body">
+          <div class="field-grid">
+            <div class="field">
+              <label for="mainFocus">主任务</label>
+              <input id="mainFocus" type="text" placeholder="例如：修复登录刷新问题" />
+            </div>
+            <div class="field">
+              <label for="secondaryFocus">辅助任务</label>
+              <input id="secondaryFocus" type="text" placeholder="例如：整理日志、检查输出" />
+            </div>
+            <div class="field">
+              <label for="todayNotes">今日备注</label>
+              <textarea class="today-note" id="todayNotes" placeholder="例如：今天不开新坑；等待 AI 跑完后先检查结果"></textarea>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel inbox">
+        <div class="panel-header">
+          <h2>临时收集</h2>
+          <div class="meta">先记</div>
+        </div>
+        <div class="panel-body">
+          <div class="inbox-list" id="inboxList"></div>
+          <div class="footer-note">这里只放临时想法。</div>
+        </div>
+      </section>
+    </section>
+
+    <section class="board-panel">
+      <div class="board-header">
+        <h2>项目工作台</h2>
+        <div class="meta">拖拽项目卡片可调整顺序</div>
+      </div>
+      <div class="project-strip" id="projectList"></div>
+    </section>
+  </div>
+
+  <div class="settings-modal" id="settingsModal" aria-hidden="true">
+    <div class="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="settings-header">
+        <h3 id="settingsTitle">外观设置</h3>
+        <button id="closeSettingsBtn">关闭</button>
+      </div>
+      <div class="settings-body">
+        <div class="settings-group">
+          <h4>主题模式</h4>
+          <div class="settings-row">
+            <label>模式</label>
+            <div class="custom-select" id="themeSelect">
+              <button class="custom-select-button" id="themeSelectButton" type="button" aria-haspopup="listbox" aria-expanded="false">
+                <span id="themeSelectLabel">跟随系统</span>
+                <span class="arrow">▾</span>
+              </button>
+              <div class="custom-select-menu" id="themeSelectMenu" role="listbox" aria-label="主题模式选择">
+                <button class="custom-option active" type="button" data-value="system">跟随系统</button>
+                <button class="custom-option" type="button" data-value="dark">深色</button>
+                <button class="custom-option" type="button" data-value="light">浅色</button>
+              </div>
+            </div>
+          </div>
+          <div class="settings-note">项目卡片使用固定配色，数量不够时自动循环使用。选择框展开时会向下占位，不再覆盖底部按钮。选择框展开时会向下占位，不再覆盖底部按钮。</div>
+        </div>
+      </div>
+      <div class="settings-footer">
+        <button class="primary" id="confirmSettingsBtn">完成</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'dev-workbench-v7';
+    const THEME_MEDIA_QUERY = '(prefers-color-scheme: dark)';
+
+    function uid() {
+      return Math.random().toString(36).slice(2, 10);
+    }
+
+    const defaultTheme = {
+      mode: 'system'
+    };
+
+    const themeLabels = {
+      system: '跟随系统',
+      dark: '深色',
+      light: '浅色'
+    };
+
+    const defaultState = {
+      theme: { ...defaultTheme },
+      today: {
+        mainFocus: '',
+        secondaryFocus: '',
+        todayNotes: ''
+      },
+      inbox: [
+        { id: uid(), text: '补一下接口埋点' },
+        { id: uid(), text: '看一眼评审评论' }
+      ],
+      projects: [
+        { id: uid(), title: '项目一', content: '这里写当前项目的自由记事内容。\n可以记录思路、待办、命令、链接、检查结果。' },
+        { id: uid(), title: '项目二', content: '这里写另一个项目的自由记事内容。\n不限制格式，按你自己的习惯写就行。' },
+        { id: uid(), title: '项目三', content: '这里写第三个项目的自由记事内容。\n拖拽卡片可以调整顺序。' }
+      ]
+    };
+
+    let state = loadState();
+    let dragProjectId = null;
+    let mediaQueryList = null;
+
+    const els = {
+      projectList: document.getElementById('projectList'),
+      inboxList: document.getElementById('inboxList'),
+      summaryRow: document.getElementById('summaryRow'),
+      addProjectBtn: document.getElementById('addProjectBtn'),
+      addInboxBtn: document.getElementById('addInboxBtn'),
+      openSettingsBtn: document.getElementById('openSettingsBtn'),
+      closeSettingsBtn: document.getElementById('closeSettingsBtn'),
+      confirmSettingsBtn: document.getElementById('confirmSettingsBtn'),
+      settingsModal: document.getElementById('settingsModal'),
+      themeSelect: document.getElementById('themeSelect'),
+      themeSelectButton: document.getElementById('themeSelectButton'),
+      themeSelectMenu: document.getElementById('themeSelectMenu'),
+      themeSelectLabel: document.getElementById('themeSelectLabel'),
+      exportBtn: document.getElementById('exportBtn'),
+      importInput: document.getElementById('importInput'),
+      resetBtn: document.getElementById('resetBtn'),
+      saveStatus: document.getElementById('saveStatus'),
+      mainFocus: document.getElementById('mainFocus'),
+      secondaryFocus: document.getElementById('secondaryFocus'),
+      todayNotes: document.getElementById('todayNotes')
+    };
+
+    bindTopLevelEvents();
+    bindSystemThemeWatcher();
+    render();
+    runSelfTests();
+
+    function deepClone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY)
+          || localStorage.getItem('dev-workbench-v6')
+          || localStorage.getItem('dev-workbench-v5')
+          || localStorage.getItem('dev-workbench-v4')
+          || localStorage.getItem('dev-workbench-v3')
+          || localStorage.getItem('dev-workbench-v2')
+          || localStorage.getItem('dev-workbench-v1');
+        if (!raw) return deepClone(defaultState);
+        const parsed = JSON.parse(raw);
+        return normalizeState(parsed);
+      } catch (err) {
+        console.error('load state failed', err);
+        return deepClone(defaultState);
+      }
+    }
+
+    function normalizeState(input) {
+      const base = deepClone(defaultState);
+      const inputTheme = input.theme || {};
+      return {
+        theme: {
+          mode: ['system', 'light', 'dark'].includes(inputTheme.mode) ? inputTheme.mode : base.theme.mode
+        },
+        today: { ...base.today, ...(input.today || {}) },
+        inbox: Array.isArray(input.inbox)
+          ? input.inbox.map(item => ({ id: item.id || uid(), text: item.text || '' }))
+          : base.inbox,
+        projects: Array.isArray(input.projects)
+          ? input.projects.map((project, index) => ({
+              id: project.id || uid(),
+              title: project.title || project.name || ('项目' + (index + 1)),
+              content: project.content || project.note || project.focus || project.now || ''
+            }))
+          : base.projects
+      };
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      els.saveStatus.textContent = '已保存 ' + new Date().toLocaleString();
+    }
+
+    function updateState(mutator, shouldRender) {
+      const doRender = shouldRender !== false;
+      mutator(state);
+      saveState();
+      if (doRender) render();
+    }
+
+    function bindTopLevelEvents() {
+      els.addProjectBtn.addEventListener('click', () => {
+        updateState(s => {
+          s.projects.push({ id: uid(), title: '新项目', content: '' });
+        });
+      });
+
+      els.addInboxBtn.addEventListener('click', () => {
+        updateState(s => {
+          s.inbox.unshift({ id: uid(), text: '' });
+        });
+      });
+
+      els.mainFocus.addEventListener('input', e => {
+        updateState(s => { s.today.mainFocus = e.target.value; }, false);
+      });
+
+      els.secondaryFocus.addEventListener('input', e => {
+        updateState(s => { s.today.secondaryFocus = e.target.value; }, false);
+      });
+
+      els.todayNotes.addEventListener('input', e => {
+        updateState(s => { s.today.todayNotes = e.target.value; }, false);
+      });
+
+      els.openSettingsBtn.addEventListener('click', openSettingsModal);
+      els.closeSettingsBtn.addEventListener('click', closeSettingsModal);
+      els.confirmSettingsBtn.addEventListener('click', closeSettingsModal);
+
+      els.settingsModal.addEventListener('click', e => {
+        if (e.target === els.settingsModal) closeSettingsModal();
+      });
+
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+          if (els.themeSelect.classList.contains('open')) {
+            closeThemeSelect();
+            return;
+          }
+          if (els.settingsModal.classList.contains('open')) {
+            closeSettingsModal();
+          }
+        }
+      });
+
+      els.themeSelectButton.addEventListener('click', e => {
+        e.stopPropagation();
+        toggleThemeSelect();
+      });
+
+      els.themeSelectMenu.querySelectorAll('[data-value]').forEach(option => {
+        option.addEventListener('click', () => {
+          const value = option.getAttribute('data-value');
+          updateState(s => {
+            s.theme.mode = ['system', 'light', 'dark'].includes(value) ? value : 'system';
+          });
+          closeThemeSelect();
+        });
+      });
+
+      document.addEventListener('click', e => {
+        if (!els.themeSelect.contains(e.target)) {
+          closeThemeSelect();
+        }
+      });
+
+      els.exportBtn.addEventListener('click', exportJson);
+      els.importInput.addEventListener('change', importJson);
+      els.resetBtn.addEventListener('click', () => {
+        const ok = window.confirm('确定要清空当前所有数据并恢复默认示例吗？');
+        if (!ok) return;
+        state = deepClone(defaultState);
+        saveState();
+        render();
+      });
+    }
+
+    function bindSystemThemeWatcher() {
+      if (!window.matchMedia) return;
+      mediaQueryList = window.matchMedia(THEME_MEDIA_QUERY);
+      const handler = () => {
+        if (state.theme.mode === 'system') applyTheme();
+      };
+      if (typeof mediaQueryList.addEventListener === 'function') {
+        mediaQueryList.addEventListener('change', handler);
+      } else if (typeof mediaQueryList.addListener === 'function') {
+        mediaQueryList.addListener(handler);
+      }
+    }
+
+    function render() {
+      applyTheme();
+      els.mainFocus.value = state.today.mainFocus;
+      els.secondaryFocus.value = state.today.secondaryFocus;
+      els.todayNotes.value = state.today.todayNotes;
+      syncThemeControls();
+      renderSummary();
+      renderInbox();
+      renderProjects();
+    }
+
+    function syncThemeControls() {
+      els.themeSelectLabel.textContent = themeLabels[state.theme.mode] || themeLabels.system;
+      els.themeSelectMenu.querySelectorAll('.custom-option').forEach(option => {
+        option.classList.toggle('active', option.getAttribute('data-value') === state.theme.mode);
+      });
+    }
+
+    function getResolvedThemeMode() {
+      if (state.theme.mode === 'system') {
+        if (window.matchMedia && window.matchMedia(THEME_MEDIA_QUERY).matches) return 'dark';
+        return 'light';
+      }
+      return state.theme.mode;
+    }
+
+    function applyTheme() {
+      document.body.classList.toggle('theme-light', getResolvedThemeMode() === 'light');
+    }
+
+    function openSettingsModal() {
+      syncThemeControls();
+      els.settingsModal.classList.add('open');
+      els.settingsModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeSettingsModal() {
+      closeThemeSelect();
+      els.settingsModal.classList.remove('open');
+      els.settingsModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function toggleThemeSelect() {
+      const isOpen = els.themeSelect.classList.contains('open');
+      els.themeSelect.classList.toggle('open', !isOpen);
+      els.themeSelectButton.setAttribute('aria-expanded', String(!isOpen));
+    }
+
+    function closeThemeSelect() {
+      els.themeSelect.classList.remove('open');
+      els.themeSelectButton.setAttribute('aria-expanded', 'false');
+    }
+
+    function renderSummary() {
+      const total = state.projects.length;
+      const notes = state.projects.reduce((sum, project) => sum + (project.content.trim() ? 1 : 0), 0);
+      const inboxCount = state.inbox.filter(item => item.text.trim()).length;
+      const filledToday = [state.today.mainFocus, state.today.secondaryFocus, state.today.todayNotes].filter(Boolean).length;
+
+      els.summaryRow.innerHTML = [
+        statHtml('项目数', total),
+        statHtml('已写记事', notes),
+        statHtml('临时收集', inboxCount),
+        statHtml('今日填写', filledToday)
+      ].join('');
+    }
+
+    function statHtml(label, value) {
+      return `
+        <div class="mini-stat">
+          <div class="label">${escapeHtml(label)}</div>
+          <div class="value">${escapeHtml(String(value))}</div>
+        </div>
+      `;
+    }
+
+    function renderProjects() {
+      if (!state.projects.length) {
+        els.projectList.innerHTML = '<div class="empty">当前没有项目，点击“新增项目”开始。</div>';
+        return;
+      }
+
+      els.projectList.innerHTML = state.projects.map((project, index) => projectCardHtml(project, index)).join('');
+      bindProjectEvents();
+      bindDragEvents();
+    }
+
+    function projectCardHtml(project, index) {
+      return `
+        <article class="project-card project-color-${index % 4}" draggable="true" data-project-id="${project.id}">
+          <div class="project-top">
+            <div class="drag-handle" title="拖拽排序">
+              <span class="drag-dots">⋮⋮</span>
+              <span>拖拽</span>
+            </div>
+          </div>
+
+          <div class="project-main">
+            <div class="project-block">
+              <label>标题</label>
+              <input class="project-title-input" type="text" data-field="title" value="${escapeAttr(project.title)}" placeholder="输入项目标题" />
+            </div>
+
+            <div class="project-block" style="flex:1 1 auto; display:flex; flex-direction:column; min-height:0;">
+              <label>记事板</label>
+              <textarea class="project-textarea" data-field="content" placeholder="在这里自由编辑内容，支持随手记录任何信息">${escapeHtml(project.content)}</textarea>
+            </div>
+
+            <div class="card-actions">
+              <button class="small-btn" data-action="duplicate">复制</button>
+              <button class="small-btn danger" data-action="delete">删除</button>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function bindProjectEvents() {
+      document.querySelectorAll('[data-project-id]').forEach(card => {
+        const projectId = card.getAttribute('data-project-id');
+
+        card.querySelectorAll('[data-field]').forEach(input => {
+          input.addEventListener('input', e => {
+            const field = e.target.getAttribute('data-field');
+            updateState(s => {
+              const project = s.projects.find(p => p.id === projectId);
+              if (!project) return;
+              project[field] = e.target.value;
+            }, false);
+          });
+        });
+
+        card.querySelectorAll('[data-action]').forEach(btn => {
+          btn.addEventListener('click', e => {
+            const action = e.currentTarget.getAttribute('data-action');
+
+            if (action === 'delete') {
+              const ok = window.confirm('删除这个项目？');
+              if (!ok) return;
+              updateState(s => {
+                s.projects = s.projects.filter(p => p.id !== projectId);
+              });
+              return;
+            }
+
+            if (action === 'duplicate') {
+              updateState(s => {
+                const target = s.projects.find(p => p.id === projectId);
+                if (!target) return;
+                s.projects.push({ ...deepClone(target), id: uid(), title: target.title + '（副本）' });
+              });
+            }
+          });
+        });
+      });
+    }
+
+    function bindDragEvents() {
+      const cards = Array.from(document.querySelectorAll('.project-card'));
+      cards.forEach(card => {
+        const id = card.getAttribute('data-project-id');
+
+        card.addEventListener('dragstart', () => {
+          dragProjectId = id;
+          card.dataset.dragging = 'true';
+        });
+
+        card.addEventListener('dragend', () => {
+          dragProjectId = null;
+          card.dataset.dragging = 'false';
+          cards.forEach(x => x.classList.remove('drag-over'));
+        });
+
+        card.addEventListener('dragover', e => {
+          e.preventDefault();
+          if (!dragProjectId || dragProjectId === id) return;
+          card.classList.add('drag-over');
+        });
+
+        card.addEventListener('dragleave', () => {
+          card.classList.remove('drag-over');
+        });
+
+        card.addEventListener('drop', e => {
+          e.preventDefault();
+          card.classList.remove('drag-over');
+          if (!dragProjectId || dragProjectId === id) return;
+          reorderProjects(dragProjectId, id);
+        });
+      });
+    }
+
+    function reorderProjects(fromId, toId) {
+      updateState(s => {
+        const fromIndex = s.projects.findIndex(p => p.id === fromId);
+        const toIndex = s.projects.findIndex(p => p.id === toId);
+        if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return;
+        const moved = s.projects.splice(fromIndex, 1)[0];
+        s.projects.splice(toIndex, 0, moved);
+      });
+    }
+
+    function renderInbox() {
+      if (!state.inbox.length) {
+        els.inboxList.innerHTML = '<div class="empty">当前没有临时收集项。</div>';
+        return;
+      }
+
+      els.inboxList.innerHTML = state.inbox.map(item => `
+        <div class="item-row" data-inbox-id="${item.id}">
+          <textarea placeholder="想到但暂不处理">${escapeHtml(item.text)}</textarea>
+          <button class="small-btn danger" data-action="delete-inbox">删除</button>
+        </div>
+      `).join('');
+
+      document.querySelectorAll('[data-inbox-id]').forEach(row => {
+        const id = row.getAttribute('data-inbox-id');
+        const textarea = row.querySelector('textarea');
+        const button = row.querySelector('button');
+
+        textarea.addEventListener('input', e => {
+          updateState(s => {
+            const item = s.inbox.find(x => x.id === id);
+            if (!item) return;
+            item.text = e.target.value;
+          }, false);
+        });
+
+        button.addEventListener('click', () => {
+          updateState(s => {
+            s.inbox = s.inbox.filter(x => x.id !== id);
+          });
+        });
+      });
+    }
+
+    function exportJson() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '开发工作台数据.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importJson(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(String(reader.result || '{}'));
+          state = normalizeState(parsed);
+          saveState();
+          render();
+        } catch (err) {
+          window.alert('导入失败：数据格式不正确。');
+        } finally {
+          event.target.value = '';
+        }
+      };
+      reader.readAsText(file, 'utf-8');
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function escapeAttr(str) {
+      return escapeHtml(str);
+    }
+
+    function runSelfTests() {
+      try {
+        const migrated = normalizeState({ theme: { mode: 'system' }, projects: [{ name: '旧项目', focus: '旧内容', note: '备注内容' }] });
+        console.assert(migrated.projects[0].title === '旧项目', '迁移：标题失败');
+        console.assert(typeof migrated.projects[0].content === 'string', '迁移：记事板应为字符串');
+        console.assert(migrated.theme.mode === 'system', '主题：跟随系统模式失败');
+
+        const themed = normalizeState({ theme: { mode: 'light' } });
+        console.assert(themed.theme.mode === 'light', '主题：浅色模式失败');
+
+        const sample = deepClone(defaultState);
+        const fromId = sample.projects[0].id;
+        const toId = sample.projects[1].id;
+        state = sample;
+        reorderProjects(fromId, toId);
+        console.assert(state.projects[1].id === fromId, '拖拽排序失败');
+
+        state = loadState();
+        console.assert(typeof escapeHtml('<x>') === 'string', 'escapeHtml 应返回字符串');
+        console.assert(defaultState.projects.length >= 3, '默认项目数量至少应为 3');
+        console.assert(['light', 'dark'].includes(getResolvedThemeMode()), '主题解析失败');
+        syncThemeControls();
+        console.assert(els.themeSelectLabel.textContent.length > 0, '自定义选择框标签失败');
+      } catch (err) {
+        console.error('自检失败', err);
+      }
+    }
+  </script>
+</body>
+</html>

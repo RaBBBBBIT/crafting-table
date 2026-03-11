@@ -1,6 +1,7 @@
 node_modules/
 dist/
 out/
+backend-data/
 *.db
 *.db-journal
 *.db-shm

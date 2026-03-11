@@ -3,121 +3,132 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';" />
+        content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self';" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>工作台 - Crafting Table</title>
+  <title>开发工作台 - Crafting Table</title>
+  <link rel="icon" href="../assets/logo.png" type="image/png" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="app-layout">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <h1 class="app-title">🛠 工作台</h1>
+  <div class="app">
+    <div class="topbar">
+      <div class="title-wrap">
+        <h1>开发工作台</h1>
+        <p id="apiSummary">当前通过远端接口读写工作台数据。</p>
       </div>
-
-      <nav class="category-nav">
-        <div class="category-nav-header">
-          <span>分类</span>
-          <button id="btn-add-category" class="icon-btn" title="添加分类">＋</button>
-        </div>
-        <ul id="category-list">
-          <li class="category-item active" data-id="all">
-            <span class="category-dot" style="background:#888;"></span>
-            <span class="category-name">全部任务</span>
-            <span class="category-count" id="count-all">0</span>
-          </li>
-        </ul>
-      </nav>
-    </aside>
-
-    <!-- Main content -->
-    <main class="main-content">
-      <header class="content-header">
-        <h2 id="current-category-title">全部任务</h2>
-        <button id="btn-add-task" class="btn btn-primary">＋ 新建任务</button>
-      </header>
-
-      <div class="filter-bar">
-        <button class="filter-btn active" data-status="all">全部</button>
-        <button class="filter-btn" data-status="pending">待处理</button>
-        <button class="filter-btn" data-status="in_progress">进行中</button>
-        <button class="filter-btn" data-status="done">已完成</button>
+      <div class="actions">
+        <span class="api-badge" id="apiStatusBadge">接口未连接</span>
+        <button class="primary" id="addProjectBtn" type="button">新增项目</button>
+        <button id="addInboxBtn" type="button">新增收集项</button>
+        <button id="openSettingsBtn" type="button">接口配置</button>
+        <button class="warn" id="resetBtn" type="button">重置远端数据</button>
       </div>
-
-      <div id="task-list" class="task-list">
-        <p class="empty-hint">暂无任务，点击「新建任务」开始吧 🚀</p>
-      </div>
-    </main>
-  </div>
-
-  <!-- Modal: Add/Edit Task -->
-  <div id="modal-task" class="modal hidden">
-    <div class="modal-overlay"></div>
-    <div class="modal-box">
-      <h3 id="modal-task-title">新建任务</h3>
-      <form id="form-task">
-        <input type="hidden" id="task-id" />
-        <div class="form-group">
-          <label for="task-title">标题 <span class="required">*</span></label>
-          <input type="text" id="task-title" placeholder="任务标题" required />
-        </div>
-        <div class="form-group">
-          <label for="task-desc">描述</label>
-          <textarea id="task-desc" rows="3" placeholder="任务描述（可选）"></textarea>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="task-status">状态</label>
-            <select id="task-status">
-              <option value="pending">待处理</option>
-              <option value="in_progress">进行中</option>
-              <option value="done">已完成</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="task-priority">优先级</label>
-            <select id="task-priority">
-              <option value="0">普通</option>
-              <option value="1">高</option>
-              <option value="2">紧急</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="task-category">分类</label>
-            <select id="task-category">
-              <option value="">无分类</option>
-            </select>
-          </div>
-        </div>
-        <div class="modal-actions">
-          <button type="button" id="btn-cancel-task" class="btn btn-secondary">取消</button>
-          <button type="submit" class="btn btn-primary">保存</button>
-        </div>
-      </form>
     </div>
+
+    <section class="top-grid">
+      <section class="panel overview">
+        <div class="panel-header">
+          <h2>总览</h2>
+          <div class="meta">统计</div>
+        </div>
+        <div class="panel-body">
+          <div class="overview-mini" id="summaryRow"></div>
+          <div class="save-status" id="saveStatus">正在连接后台接口...</div>
+        </div>
+      </section>
+
+      <section class="panel today">
+        <div class="panel-header">
+          <h2>今日安排</h2>
+          <div class="meta">主线</div>
+        </div>
+        <div class="panel-body">
+          <div class="field-grid">
+            <div class="field">
+              <label for="mainFocus">主任务</label>
+              <input id="mainFocus" type="text" placeholder="例如：修复登录刷新问题" />
+            </div>
+            <div class="field">
+              <label for="secondaryFocus">辅助任务</label>
+              <input id="secondaryFocus" type="text" placeholder="例如：整理日志、检查输出" />
+            </div>
+            <div class="field">
+              <label for="todayNotes">今日备注</label>
+              <textarea class="today-note" id="todayNotes" placeholder="例如：今天不开新坑；等待 AI 跑完后先检查结果"></textarea>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel inbox">
+        <div class="panel-header">
+          <h2>临时收集</h2>
+          <div class="meta">先记</div>
+        </div>
+        <div class="panel-body">
+          <div class="inbox-list" id="inboxList"></div>
+          <div class="footer-note">这里只放临时想法或还没排期的事项。</div>
+        </div>
+      </section>
+    </section>
+
+    <section class="board-panel">
+      <div class="board-header">
+        <h2>项目工作台</h2>
+        <div class="meta">拖拽项目卡片可调整顺序</div>
+      </div>
+      <div class="project-strip" id="projectList"></div>
+    </section>
   </div>
 
-  <!-- Modal: Add/Edit Category -->
-  <div id="modal-category" class="modal hidden">
-    <div class="modal-overlay"></div>
-    <div class="modal-box modal-box-sm">
-      <h3 id="modal-category-title">新建分类</h3>
-      <form id="form-category">
-        <input type="hidden" id="category-id" />
-        <div class="form-group">
-          <label for="category-name">名称 <span class="required">*</span></label>
-          <input type="text" id="category-name" placeholder="分类名称" required />
+  <div class="settings-modal" id="settingsModal" aria-hidden="true">
+    <div class="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="settings-header">
+        <h3 id="settingsTitle">接口与外观配置</h3>
+        <button id="closeSettingsBtn" type="button">关闭</button>
+      </div>
+      <div class="settings-body">
+        <div class="settings-group">
+          <h4>后台接口</h4>
+          <div class="settings-row">
+            <label for="apiBaseUrlInput">服务器地址</label>
+            <input id="apiBaseUrlInput" type="text" placeholder="例如：http://127.0.0.1:8787" />
+          </div>
+          <div class="settings-row">
+            <label>接口约定</label>
+            <div class="settings-note">
+              客户端会请求 `GET /api/health`、`GET /api/workbench-state` 和 `PUT /api/workbench-state`。
+            </div>
+          </div>
+          <div class="settings-inline-actions">
+            <button id="testApiBtn" type="button">测试连接</button>
+            <button class="primary" id="saveApiBtn" type="button">保存并重新连接</button>
+          </div>
+          <div class="settings-note" id="apiTestResult">保存后会从新地址重新拉取工作台数据。</div>
         </div>
-        <div class="form-group">
-          <label for="category-color">颜色</label>
-          <input type="color" id="category-color" value="#4CAF50" />
+
+        <div class="settings-group">
+          <h4>主题模式</h4>
+          <div class="settings-row">
+            <label>模式</label>
+            <div class="custom-select" id="themeSelect">
+              <button class="custom-select-button" id="themeSelectButton" type="button" aria-haspopup="listbox" aria-expanded="false">
+                <span id="themeSelectLabel">跟随系统</span>
+                <span class="arrow">▾</span>
+              </button>
+              <div class="custom-select-menu" id="themeSelectMenu" role="listbox" aria-label="主题模式选择">
+                <button class="custom-option active" type="button" data-value="system">跟随系统</button>
+                <button class="custom-option" type="button" data-value="dark">深色</button>
+                <button class="custom-option" type="button" data-value="light">浅色</button>
+              </div>
+            </div>
+          </div>
+          <div class="settings-note">当前项目已经改成前后端分离：本地只保存接口配置，工作台内容由远端服务负责。</div>
         </div>
-        <div class="modal-actions">
-          <button type="button" id="btn-cancel-category" class="btn btn-secondary">取消</button>
-          <button type="submit" class="btn btn-primary">保存</button>
-        </div>
-      </form>
+      </div>
+      <div class="settings-footer">
+        <button class="primary" id="confirmSettingsBtn" type="button">完成</button>
+      </div>
     </div>
   </div>
 
