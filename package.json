@@ -1,0 +1,24 @@
+{
+  "name": "crafting-table",
+  "version": "1.0.0",
+  "description": "基于Electron的工作台程序，后端用node.js+sqlite实现",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "rebuild": "electron-rebuild"
+  },
+  "keywords": [
+    "electron",
+    "sqlite",
+    "workbench"
+  ],
+  "author": "于康源",
+  "license": "MIT",
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.3",
+    "electron": "^41.0.0"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.6.2"
+  }
+}
